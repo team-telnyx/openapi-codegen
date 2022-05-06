@@ -20,7 +20,11 @@ pub fn module(openapi: &OpenApi, methods: &str) -> String {
     module.push_str(&module_docs);
     module.push_str("\n\n");
 
-    // TODO: api client object
+    module.push_str(include_str!("imports.py"));
+    module.push_str("\n\n");
+
+    module.push_str(include_str!("api_client.py"));
+    module.push_str("\n\n");
 
     module.push_str(methods);
 

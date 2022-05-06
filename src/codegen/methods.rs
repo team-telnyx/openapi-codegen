@@ -90,16 +90,24 @@ fn method(
 ) {
     let signature = signature(method, path, operation);
 
+    tokens.push_str(super::INDENT);
     tokens.push_str(&signature);
     tokens.push('\n');
 
     if let Some(docs) = docs(operation) {
+        tokens.push_str(super::INDENT);
         tokens.push_str(super::INDENT);
         tokens.push_str(&docs);
         tokens.push('\n');
     }
 
     // TODO: function body
+    tokens.push_str(super::INDENT);
+    tokens.push_str(super::INDENT);
+    tokens.push_str(&format!(
+        r#"self._session.{}(f"{{self._base_url}}{}")"#,
+        method, path
+    ));
 
     tokens.push_str("\n\n");
 }
