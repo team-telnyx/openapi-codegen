@@ -1,5 +1,13 @@
 # Shortcuts for Python commands
 
+.PHONY: from-json
+from-json:
+	@cargo run -- json < openapi.json > openapi.py
+
+.PHONY: from-yaml
+from-yaml:
+	@cargo run -- yaml < openapi.yaml > openapi.py
+
 .PHONY: update
 update: requirements.in
 	@pip-compile \
