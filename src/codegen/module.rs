@@ -1,0 +1,28 @@
+//! Generate the API client module
+
+use okapi::openapi3::OpenApi;
+
+/// Generate the API client module
+pub fn module(openapi: &OpenApi, methods: &str) -> String {
+    let mut module = String::new();
+
+    let module_docs = {
+        let mut module_docs = format!("{} HTTP API client", openapi.info.title);
+
+        if let Some(description) = &openapi.info.description {
+            module_docs.push_str("\n\n");
+            module_docs.push_str(description);
+        };
+
+        format!(r#""""{module_docs}""""#)
+    };
+
+    module.push_str(&module_docs);
+    module.push_str("\n\n");
+
+    // TODO: api client object
+
+    module.push_str(methods);
+
+    module
+}
