@@ -6,3 +6,14 @@ target
 
 # Nix artifacts
 /result
+
+# Python artifacts
+/.pycache
+/.venv
+
+# Generator inputs
+/openapi.json
+/openapi.yaml
+
+# Generator artifacts
+/openapi.py

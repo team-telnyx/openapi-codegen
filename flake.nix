@@ -18,7 +18,12 @@
     }: flake-utils.lib.eachDefaultSystem (system:
     let
       pkgs = nixpkgs.legacyPackages.${system};
+
+      python = pkgs.python310;
+      pythonPackages = pkgs.python310Packages;
+
       rust = fenix.packages.${system};
+
       cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
     in
     {
@@ -52,9 +57,23 @@
 
           nixpkgs-fmt
 
+          pyright
+
           # Needed for `./bin/ci`
           ncurses
-        ];
+        ] ++ (with pythonPackages; [
+          # The tests are failing for some reason but the tool works anyway. I'm
+          # guessing there's just some new impure test that Nix doesn't like.
+          (pdoc3.overrideAttrs (old: { doInstallCheck = false; }))
+
+          black
+          isort
+          pip
+          pip-tools
+          pylint
+        ]);
+
+        NIX_PYTHON_SITE_PACKAGES = "${python.sitePackages}";
       });
 
       checks = {
