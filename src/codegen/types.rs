@@ -46,7 +46,18 @@ pub fn types(openapi: &OpenApi) -> String {
                 code.push_str(name);
                 code.push_str(": ");
                 code.push_str(&field_type(&data.r#type));
-                code.push('\n');
+
+                // TODO: handle optional/default values
+                code.push_str(" = Field(..., ");
+
+                // Pydantic field documentation
+                if let Some(docs) = data.docs.as_ref() {
+                    code.push_str(r#"description="""""#);
+                    code.push_str(docs);
+                    code.push_str(r#"""", "#);
+                }
+
+                code.push_str(")\n");
 
                 // Field documentation
                 if let Some(docs) = data.docs.as_ref() {
