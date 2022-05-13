@@ -29,7 +29,7 @@ pub fn types(openapi: &OpenApi) -> String {
 
         code.push_str("class ");
         code.push_str(name);
-        code.push_str(":\n");
+        code.push_str("(BaseModel):\n");
 
         if let Type::Struct(s) = r#type {
             // Struct documentation
