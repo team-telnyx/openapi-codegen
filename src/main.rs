@@ -17,6 +17,7 @@ use okapi::{
 mod args;
 mod codegen;
 mod entrypoint;
+mod parse;
 
 fn main() -> Result<(), Box<dyn StdError>> {
     let args = args::Args::parse();

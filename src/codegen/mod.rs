@@ -8,3 +8,6 @@ pub use methods::methods;
 
 mod module;
 pub use module::module;
+
+mod types;
+pub use types::types;

@@ -23,6 +23,8 @@ pub fn module(openapi: &OpenApi, methods: &str) -> String {
     module.push_str(include_str!("imports.py"));
     module.push_str("\n\n");
 
+    module.push_str(&crate::codegen::types(openapi));
+
     module.push_str(include_str!("api_client.py"));
     module.push_str("\n\n");
 

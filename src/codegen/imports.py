@@ -1,3 +1,3 @@
-from typing import Optional
+from typing import Optional, List, Set, Dict, Any
 
 import aiohttp
