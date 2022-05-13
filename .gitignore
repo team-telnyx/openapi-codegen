@@ -12,8 +12,8 @@ target
 /.venv
 
 # Generator inputs
-/openapi.json
-/openapi.yaml
+/openapi*.json
+/openapi*.yaml
 
 # Generator artifacts
 /openapi.py
