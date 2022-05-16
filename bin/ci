@@ -23,7 +23,7 @@ banner() {
     h_line "${2:-}"
     printf \
         '%*s' \
-        "$(( ( ${COLUMNS:-$(tput cols)} - ${#1} ) / 2))" \
+        "$(((${COLUMNS:-$(tput cols)} - ${#1}) / 2))" \
         ''
     color 6 "${2:-}"
     echo "$1"
@@ -41,15 +41,41 @@ failure() {
 trap failure EXIT
 
 banner "Versions" first
+nix --version
+
+echo -n "direnv "
+direnv --version
+
 rustc --version
 cargo --version
-rustfmt --version
+cargo fmt --version
 rustdoc --version
 cargo clippy -- --version
 nixpkgs-fmt --version 2>&1 | head -n1 || true
+
+echo -n "shfmt "
+shfmt -version
+
+echo -n "shellcheck "
+shellcheck --version | grep version: | cut -f2 -d' '
+
+echo -n "markdownlint "
+markdownlint --version
+
 cargo outdated -R
 
 banner "Linting"
+markdownlint -i target .
+shfmt -d -i 4 .
+find . \
+    -type f \
+    -not -path './target/*' \
+    -not -path './.git/*' \
+    -exec file --mime-type {} \; |
+    grep 'text/x-shellscript' |
+    cut -d: -f1 |
+    xargs shellcheck
+
 nixpkgs-fmt --check .
 cargo fmt -- --check
 cargo clippy -- -D warnings

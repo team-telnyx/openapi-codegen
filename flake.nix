@@ -49,19 +49,21 @@
         # sources, and it can read this environment variable to do so
         RUST_SRC_PATH = "${rust.stable.rust-src}/lib/rustlib/src/rust/library";
 
-        nativeBuildInputs = with pkgs; (old.nativeBuildInputs or [ ]) ++ [
+        nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ (with pkgs; [
           cargo-outdated
-          rust.stable.clippy
-          rust.stable.rust-src
-          rust.latest.rustfmt
-
-          nixpkgs-fmt
-
-          pyright
-
-          # Needed for `./bin/ci`
+          file
           ncurses
-        ] ++ (with pythonPackages; [
+          nixpkgs-fmt
+          pyright
+          shellcheck
+          shfmt
+        ]) ++ (with rust; [
+          latest.rustfmt
+          stable.clippy
+          stable.rust-src
+        ]) ++ (with pkgs.nodePackages; [
+          markdownlint-cli
+        ]) ++ (with pythonPackages; [
           # The tests are failing for some reason but the tool works anyway. I'm
           # guessing there's just some new impure test that Nix doesn't like.
           (pdoc3.overrideAttrs (old: { doInstallCheck = false; }))
