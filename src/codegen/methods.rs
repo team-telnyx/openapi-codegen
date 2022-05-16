@@ -57,28 +57,26 @@ fn signature(method: &str, path: &str, operation: &Operation) -> String {
 }
 
 /// Generate documentation for a method
-fn docs(operation: &Operation) -> Option<String> {
-    if operation.summary.is_some() || operation.description.is_some() {
+fn docs(op: &Operation) -> Option<String> {
+    (op.summary.is_some() || op.description.is_some()).then(|| {
         let mut docs = r#"""""#.to_owned();
 
-        if let Some(summary) = operation.summary.as_deref() {
+        if let Some(summary) = op.summary.as_deref() {
             docs.push_str(summary);
 
-            if operation.description.is_some() {
+            if op.description.is_some() {
                 docs.push_str("\n\n");
             }
         }
 
-        if let Some(description) = operation.description.as_deref() {
+        if let Some(description) = op.description.as_deref() {
             docs.push_str(description);
         }
 
         docs.push_str(r#"""""#);
 
-        Some(docs)
-    } else {
-        None
-    }
+        docs
+    })
 }
 
 /// Generates a method for a given HTTP URL and HTTP method

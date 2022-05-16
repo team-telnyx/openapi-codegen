@@ -117,7 +117,13 @@ fn field_type(ty: &Type) -> String {
         // This is a reference to another type
         Type::Ref(x) => {
             // This seems... cursed
-            format!(r#""{}""#, x.rsplit('/').next().unwrap().to_owned())
+            format!(
+                r#""{}""#,
+                x.rsplit('/')
+                    .next()
+                    .expect("invalid reference name")
+                    .to_owned()
+            )
         }
     }
 }
