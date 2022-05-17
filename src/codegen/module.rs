@@ -1,5 +1,7 @@
 //! Generate the API client module
 
+use std::collections::HashMap;
+
 use okapi::openapi3::OpenApi;
 
 /// Generate the API client module
@@ -15,6 +17,14 @@ pub fn module(openapi: &OpenApi) -> String {
         };
 
         format!(r#""""{module_docs}""""#)
+    };
+
+    // TODO: remove this when more auth methods are supported
+    #[allow(clippy::zero_sized_map_values)]
+    let _security_schemes = {
+        openapi.components.as_ref().map_or_else(HashMap::default, |x| {
+            crate::parse::security_schemes(&x.security_schemes)
+        })
     };
 
     module.push_str(&module_docs);

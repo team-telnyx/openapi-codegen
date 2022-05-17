@@ -17,6 +17,9 @@ pub struct Function {
 
     /// The arguments this function will take
     pub arguments: Vec<Argument>,
+
+    /// Names of security schemes this request can use
+    pub security_schemes: Vec<String>,
 }
 
 /// An owned HTTP method
@@ -70,6 +73,12 @@ impl Function {
         Ok(Function {
             // TODO: include more things like examples, summary, and so on
             docs: operation.description.clone(),
+            security_schemes: operation
+                .security
+                .iter()
+                .flat_map(|x| x.iter().flat_map(|x| x.iter().map(|(k, _)| k)))
+                .cloned()
+                .collect(),
             arguments: args,
         })
     }
