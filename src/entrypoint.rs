@@ -31,7 +31,5 @@ pub fn from_json(s: &str) -> Result<String, Box<dyn StdError>> {
 /// Converts an OpenAPI specification into a string containing source code
 #[must_use = "It's pointless to call this function unless you use the result"]
 pub fn from_openapi(openapi: &OpenApi) -> String {
-    let methods = crate::codegen::functions(openapi);
-
-    crate::codegen::module(openapi, &methods)
+    crate::codegen::module(openapi)
 }

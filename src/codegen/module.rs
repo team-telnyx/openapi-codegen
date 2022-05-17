@@ -3,7 +3,7 @@
 use okapi::openapi3::OpenApi;
 
 /// Generate the API client module
-pub fn module(openapi: &OpenApi, methods: &str) -> String {
+pub fn module(openapi: &OpenApi) -> String {
     let mut module = String::new();
 
     let module_docs = {
@@ -28,7 +28,7 @@ pub fn module(openapi: &OpenApi, methods: &str) -> String {
     module.push_str(include_str!("api_client.py"));
     module.push_str("\n\n");
 
-    module.push_str(methods);
+    module.push_str(&crate::codegen::functions(openapi));
 
     module
 }
