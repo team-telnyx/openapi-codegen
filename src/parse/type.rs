@@ -37,6 +37,9 @@ pub enum Type {
     /// Any type
     Any,
 
+    /// An optional [`Type`](Type)
+    Option(Box<Self>),
+
     /// List of another [`Type`](Type)
     List(Box<Self>),
 

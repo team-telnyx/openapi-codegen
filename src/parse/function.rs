@@ -106,16 +106,20 @@ impl Argument {
                     ..
                 } = &param.value
                 {
-                    Some((param.name.as_str(), schema))
+                    Some((param, schema))
                 } else {
                     // TODO: is this lossy?
                     None
                 }
             })
-            .try_fold(Vec::default(), |mut acc, (name, schema)| {
+            .try_fold(Vec::default(), |mut acc, (param, schema)| {
                 acc.push(Argument {
-                    name: name.to_owned(),
-                    r#type: schema.try_into()?,
+                    name: param.name.clone(),
+                    r#type: if param.required {
+                        schema.try_into()?
+                    } else {
+                        Type::Option(Box::new(schema.try_into()?))
+                    },
                 });
 
                 Ok::<_, Error>(acc)

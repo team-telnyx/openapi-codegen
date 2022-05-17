@@ -89,6 +89,14 @@ pub fn type_to_string(ty: &Type) -> String {
         Type::Bool => "bool".into(),
         Type::Any => "Any".into(),
 
+        Type::Option(ty) => {
+            let mut x = "Optional[".to_owned();
+            x.push_str(&type_to_string(ty));
+            x.push(']');
+
+            x
+        }
+
         Type::List(ty) => {
             let mut x = "List[".to_owned();
             x.push_str(&type_to_string(ty));
