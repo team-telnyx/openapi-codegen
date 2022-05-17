@@ -29,10 +29,6 @@ use std::{
 };
 
 use clap::StructOpt;
-use okapi::{
-    openapi3::{Operation, ParameterValue, RefOr},
-    schemars::schema::{InstanceType, SingleOrVec},
-};
 
 mod args;
 mod codegen;
@@ -59,52 +55,4 @@ fn main() -> Result<(), Box<dyn StdError>> {
     std::io::stdout().flush()?;
 
     Ok(())
-}
-
-/// Resolves the OpenAPI type for a given parameter name
-fn resolve_type_for(parameter_name: &str, operation: &Operation) -> String {
-    let parameter = operation
-        .parameters
-        .iter()
-        .find_map(|parameter| {
-            let parameter = if let RefOr::Object(x) = parameter {
-                x
-            } else {
-                return None;
-            };
-
-            (parameter.name == parameter_name).then(|| parameter)
-        })
-        .expect("couldn't find requested parameter");
-
-    let schema = match &parameter.value {
-        ParameterValue::Schema {
-            schema,
-            ..
-        } => schema,
-
-        ParameterValue::Content {
-            ..
-        } => todo!(),
-    };
-
-    let ty = match &schema.instance_type {
-        Some(SingleOrVec::Single(x)) => match x.as_ref() {
-            InstanceType::Number => "float",
-            InstanceType::Integer => "int",
-            InstanceType::Boolean => "bool",
-            InstanceType::String => "str",
-            InstanceType::Null => "None",
-
-            InstanceType::Object | InstanceType::Array => todo!(),
-        },
-
-        Some(SingleOrVec::Vec(_)) | None => todo!(),
-    };
-
-    if parameter.required {
-        ty.to_owned()
-    } else {
-        format!("Optional[{ty}]")
-    }
 }
