@@ -147,7 +147,6 @@ impl Type {
                     .iter()
                     // TODO: use `Iterator::try_collect` instead when it stabilizes
                     .try_fold(HashMap::new(), |mut acc, (name, schema)| {
-                        // TODO: handle case where field type is an object
                         let mut field = Field::try_from(schema)?;
 
                         // If the field is optional, make it so
