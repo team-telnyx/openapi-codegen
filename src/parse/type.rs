@@ -148,7 +148,14 @@ impl Type {
                     // TODO: use `Iterator::try_collect` instead when it stabilizes
                     .try_fold(HashMap::new(), |mut acc, (name, schema)| {
                         // TODO: handle case where field type is an object
-                        acc.insert(name.clone(), Field::try_from(schema)?);
+                        let mut field = Field::try_from(schema)?;
+
+                        // If the field is optional, make it so
+                        if object_validation.required.get(name).is_none() {
+                            field.r#type = Self::Option(Box::new(field.r#type));
+                        }
+
+                        acc.insert(name.clone(), field);
                         Ok::<_, Error>(acc)
                     })?
                     .into();
