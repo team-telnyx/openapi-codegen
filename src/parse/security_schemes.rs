@@ -1,6 +1,6 @@
 //! OpenAPI security scheme parsing
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use okapi::{
     openapi3::{
@@ -21,8 +21,8 @@ pub enum SecurityScheme {
 #[allow(clippy::zero_sized_map_values)]
 pub fn security_schemes(
     security_schemes: &Map<String, RefOr<OkapiSecurityScheme>>,
-) -> HashMap<String, SecurityScheme> {
-    let mut schemes = HashMap::default();
+) -> BTreeMap<String, SecurityScheme> {
+    let mut schemes = BTreeMap::default();
 
     for (name, scheme) in security_schemes {
         let object = if let RefOr::Object(x) = scheme {

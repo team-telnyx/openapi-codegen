@@ -1,6 +1,6 @@
 //! Struct parsing
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use super::Field;
 
@@ -12,8 +12,8 @@ pub struct Struct {
 
     /// The fields of this structure
     ///
-    /// The [`HashMap`](HashMap)'s keys are the names of the fields.
-    pub fields: HashMap<String, Field>,
+    /// The [`BTreeMap`](BTreeMap)'s keys are the names of the fields.
+    pub fields: BTreeMap<String, Field>,
 }
 
 impl Struct {
@@ -23,8 +23,8 @@ impl Struct {
     }
 }
 
-impl From<HashMap<String, Field>> for Struct {
-    fn from(fields: HashMap<String, Field>) -> Self {
+impl From<BTreeMap<String, Field>> for Struct {
+    fn from(fields: BTreeMap<String, Field>) -> Self {
         Self {
             docs: None,
             fields,

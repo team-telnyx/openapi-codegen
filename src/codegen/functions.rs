@@ -1,6 +1,6 @@
 //! Generate code for HTTP methods
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use heck::ToSnakeCase;
 use okapi::openapi3::OpenApi;
@@ -13,7 +13,7 @@ use crate::parse::{Argument, Function, SecurityScheme, Type};
 #[allow(clippy::zero_sized_map_values)]
 pub fn functions(
     openapi: &OpenApi,
-    security_schemes: &HashMap<String, SecurityScheme>,
+    security_schemes: &BTreeMap<String, SecurityScheme>,
 ) -> String {
     let fs = Function::try_from_paths(&openapi.paths).expect("problems");
 
@@ -45,7 +45,7 @@ fn body<S1, S2>(
     method: S1,
     path: S2,
     function: &Function,
-    security_schemes: &HashMap<String, SecurityScheme>,
+    security_schemes: &BTreeMap<String, SecurityScheme>,
 ) -> String
 where
     S1: AsRef<str>,
@@ -162,7 +162,7 @@ fn arguments<'a, I: Iterator<Item = &'a Argument>>(arguments: I) -> String {
 ///
 /// This is the part that goes between the `->` and the `:`. Return value will
 /// not contain any newlines.
-fn return_type(responses: &HashMap<String, Type>) -> String {
+fn return_type(responses: &BTreeMap<String, Type>) -> String {
     let return_types =
         responses.iter().map(|(_code, ty)| ty).cloned().collect::<Vec<_>>();
 

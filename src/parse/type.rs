@@ -3,7 +3,7 @@
 //! "Type" meaning both primitive JSON types like strings and numbers as well as
 //! complex types like objects and lists.
 
-use std::{borrow::Borrow, collections::HashMap};
+use std::{borrow::Borrow, collections::BTreeMap};
 
 use okapi::{
     openapi3::SchemaObject,
@@ -146,7 +146,7 @@ impl Type {
                     .properties
                     .iter()
                     // TODO: use `Iterator::try_collect` instead when it stabilizes
-                    .try_fold(HashMap::new(), |mut acc, (name, schema)| {
+                    .try_fold(BTreeMap::new(), |mut acc, (name, schema)| {
                         let mut field = Field::try_from(schema)?;
 
                         // If the field is optional, make it so

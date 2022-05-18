@@ -1,6 +1,6 @@
 //! Function parsing
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use okapi::{
     openapi3::{Operation, Parameter, ParameterValue, PathItem, RefOr},
@@ -22,7 +22,7 @@ pub struct Function {
     pub security_schemes: Vec<String>,
 
     /// The responses returned by this API request
-    pub responses: HashMap<String, Type>,
+    pub responses: BTreeMap<String, Type>,
 }
 
 /// An owned HTTP method
@@ -36,7 +36,7 @@ pub type HttpMethodBuf = String;
 pub type OpenApiPathBuf = String;
 
 /// Functions generated from OpenAPI
-type Functions = HashMap<(HttpMethodBuf, OpenApiPathBuf), Function>;
+type Functions = BTreeMap<(HttpMethodBuf, OpenApiPathBuf), Function>;
 
 /// Deduplicates HTTP method specification
 macro_rules! parse_function {
@@ -100,7 +100,7 @@ impl Function {
                     )
                 })
             })
-            .try_fold(HashMap::new(), |mut acc, x| {
+            .try_fold(BTreeMap::new(), |mut acc, x| {
                 let (code, response) = x?;
                 acc.insert(code.clone(), response);
                 Ok::<_, Error>(acc)
