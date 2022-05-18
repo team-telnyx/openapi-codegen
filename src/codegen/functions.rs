@@ -23,7 +23,7 @@ pub fn functions(
         code.push_str(&signature(1, &method, &path, &function));
         code.push_str(&documentation(2, function.docs.as_ref()));
         code.push_str(&body(2, method, path, &function, security_schemes));
-        code.push('\n');
+        code.push_str("\n\n\n");
     }
 
     code
