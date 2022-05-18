@@ -88,11 +88,17 @@ impl Function {
                 })
                 .transpose()
             })
-            .filter_map(|x| {
-                x.map(|(code, x)| x.schema.as_ref().map(|x| (code, x)))
-                    .transpose()
+            .map(|x| {
+                x.and_then(|(code, x)| {
+                    x.schema.as_ref().map_or_else(
+                        // Work around incomplete specs by assuming
+                        // correctly-set content type but missing SchemaObject
+                        // means it's any JSON type.
+                        || Ok((code, Type::Any)),
+                        |x| Ok((code, Type::try_from(x)?)),
+                    )
+                })
             })
-            .map(|x| x.and_then(|(code, x)| Ok((code, Type::try_from(x)?))))
             .try_fold(HashMap::new(), |mut acc, x| {
                 let (code, response) = x?;
                 acc.insert(code.clone(), response);
