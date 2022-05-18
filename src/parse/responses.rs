@@ -1,4 +1,5 @@
-/// Response parsing
+//! Response parsing
+
 use okapi::openapi3::{RefOr, Responses as OkapiResponses};
 
 use super::{Error, ErrorKind, Type};
