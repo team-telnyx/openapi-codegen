@@ -7,7 +7,7 @@ use okapi::{
     schemars::Map,
 };
 
-use super::{Error, Type};
+use super::{Error, Responses, Type};
 
 /// A parsed function
 #[derive(Debug)]
@@ -20,6 +20,9 @@ pub struct Function {
 
     /// Names of security schemes this request can use
     pub security_schemes: Vec<String>,
+
+    /// The responses returned by this API request
+    pub responses: Responses,
 }
 
 /// An owned HTTP method
@@ -39,6 +42,7 @@ type Functions = HashMap<(HttpMethodBuf, OpenApiPathBuf), Function>;
 macro_rules! parse_function {
     ($functions:ident, $path:ident, $path_item:ident, $method:ident) => {
         if let Some(operation) = $path_item.$method.as_ref() {
+            eprintln!("{}\t{}", stringify!($method), $path);
             $functions.insert(
                 (stringify!($method).to_owned(), $path.to_owned()),
                 Self::try_from_operation(operation)?,
@@ -80,6 +84,8 @@ impl Function {
                 .cloned()
                 .collect(),
             arguments: args,
+
+            responses: Responses::try_from(&operation.responses)?,
         })
     }
 }

@@ -17,20 +17,28 @@ pub fn functions(openapi: &OpenApi) -> String {
     for ((method, path), function) in fs {
         let fn_ident = format!("{method}_{path}").to_snake_case();
 
+        let return_code = type_to_string(&function.responses.good, false);
+
         let args =
             function.arguments.iter().fold(String::default(), |mut acc, x| {
-                write!(&mut acc, "{}: {}, ", x.name, type_to_string(&x.r#type))
-                    .expect("write failed");
+                write!(
+                    &mut acc,
+                    "{}: {}, ",
+                    x.name,
+                    type_to_string(&x.r#type, false)
+                )
+                .expect("write failed");
 
                 acc
             });
 
         writeln!(
             &mut code,
-            "{}async def {}(self, {}):",
+            "{}async def {}(self, {}) -> {}:",
             super::INDENT,
             fn_ident,
-            args
+            args,
+            return_code,
         )
         .expect("write failed");
 

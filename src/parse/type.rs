@@ -3,7 +3,7 @@
 //! "Type" meaning both primitive JSON types like strings and numbers as well as
 //! complex types like objects and lists.
 
-use std::collections::HashMap;
+use std::{borrow::Borrow, collections::HashMap};
 
 use okapi::{
     openapi3::SchemaObject,
@@ -137,10 +137,10 @@ impl Type {
 
     /// Try to convert a [`SchemaObject`](SchemaObject) into an object type
     fn try_from_object(schema_object: &SchemaObject) -> Result<Self, Error> {
-        let x = schema_object
+        schema_object
             .object
             .as_deref()
-            .ok_or_else(|| ErrorKind::Unimplemented.into())
+            .ok_or_else(|| Error::from(ErrorKind::OtherType))
             .and_then(|object_validation| {
                 let mut s: Struct = object_validation
                     .properties
@@ -170,9 +170,22 @@ impl Type {
                 }
 
                 Ok(Type::Struct(s))
-            });
-
-        x
+            })
+            .or_else(|e| {
+                if matches!(e.kind, ErrorKind::OtherType) {
+                    match &schema_object.instance_type {
+                        Some(SingleOrVec::Single(x)) => match x.borrow() {
+                            // This is an object, but its fields and type are
+                            // unknown
+                            InstanceType::Object => Ok(Type::Any),
+                            _ => Err(ErrorKind::OtherType.into()),
+                        },
+                        _ => Err(ErrorKind::OtherType.into()),
+                    }
+                } else {
+                    Err(e)
+                }
+            })
     }
 
     /// Try to convert a [`SchemaObject`](SchemaObject) into list-like type

@@ -45,7 +45,7 @@ pub fn types(openapi: &OpenApi) -> String {
                 code.push_str(super::INDENT);
                 code.push_str(name);
                 code.push_str(": ");
-                code.push_str(&type_to_string(&data.r#type));
+                code.push_str(&type_to_string(&data.r#type, true));
 
                 if matches!(data.r#type, Type::Option(_)) {
                     code.push_str(" = Field(None, ");
@@ -82,7 +82,11 @@ pub fn types(openapi: &OpenApi) -> String {
 }
 
 /// Generate a field's type
-pub fn type_to_string(ty: &Type) -> String {
+///
+/// The `deferred` argument indicates whether references should be quoted.
+/// Quoting can be necessary in Python when a type depends on another type that
+/// hasn't yet been defined.
+pub fn type_to_string(ty: &Type, deferred: bool) -> String {
     match ty {
         // Simple types
         Type::String => "str".into(),
@@ -94,7 +98,7 @@ pub fn type_to_string(ty: &Type) -> String {
 
         Type::Option(ty) => {
             let mut x = "Optional[".to_owned();
-            x.push_str(&type_to_string(ty));
+            x.push_str(&type_to_string(ty, deferred));
             x.push(']');
 
             x
@@ -102,7 +106,7 @@ pub fn type_to_string(ty: &Type) -> String {
 
         Type::List(ty) => {
             let mut x = "List[".to_owned();
-            x.push_str(&type_to_string(ty));
+            x.push_str(&type_to_string(ty, deferred));
             x.push(']');
 
             x
@@ -110,7 +114,7 @@ pub fn type_to_string(ty: &Type) -> String {
 
         Type::Set(ty) => {
             let mut x = "Set[".to_owned();
-            x.push_str(&type_to_string(ty));
+            x.push_str(&type_to_string(ty, deferred));
             x.push(']');
 
             x
@@ -128,13 +132,17 @@ pub fn type_to_string(ty: &Type) -> String {
         // This is a reference to another type
         Type::Ref(x) => {
             // This seems... cursed
-            format!(
-                r#""{}""#,
-                x.rsplit('/')
-                    .next()
-                    .expect("invalid reference name")
-                    .to_owned()
-            )
+            let name = x
+                .rsplit('/')
+                .next()
+                .expect("invalid reference name")
+                .to_owned();
+
+            if deferred {
+                format!(r#""{name}""#,)
+            } else {
+                name
+            }
         }
     }
 }
