@@ -1,7 +1,7 @@
 from typing import Optional, List, Set, Dict, Any
 
 import aiohttp
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, parse_obj_as
 
 class _BaseModel(BaseModel):
     class Config:

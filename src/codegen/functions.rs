@@ -1,15 +1,20 @@
 //! Generate code for HTTP methods
 
-use std::fmt::Write;
+use std::{collections::HashMap, fmt::Write};
 
 use heck::ToSnakeCase;
 use okapi::openapi3::OpenApi;
 
 use super::type_to_string;
-use crate::parse::Function;
+use crate::parse::{Function, SecurityScheme, Type};
 
 /// Generates a function for each method available on each HTTP path
-pub fn functions(openapi: &OpenApi) -> String {
+// TODO: remove this when more HTTP auth methods are implemented
+#[allow(clippy::zero_sized_map_values)]
+pub fn functions(
+    openapi: &OpenApi,
+    security_schemes: &HashMap<String, SecurityScheme>,
+) -> String {
     let fs = Function::try_from_paths(&openapi.paths).expect("problems");
 
     let mut code = String::new();
@@ -54,6 +59,39 @@ pub fn functions(openapi: &OpenApi) -> String {
             writeln!(&mut code, "{i}{i}pass", i = super::INDENT)
                 .expect("write failed");
         }
+
+        // A list of methods this request can be authenticated by
+        let mut schemes = function
+            .security_schemes
+            .iter()
+            .filter_map(|name| security_schemes.get(name))
+            .copied();
+
+        write!(
+            &mut code,
+            "{i}{i}resp = await self._session.get(f\"{{self._base_url}}{}\", ",
+            path,
+            i = super::INDENT,
+        )
+        .expect("write failed");
+
+        if schemes.any(|x| x == SecurityScheme::BasicAuth) {
+            write!(&mut code, "auth=self._auth").expect("write failed");
+        }
+
+        writeln!(&mut code, ")").expect("write failed");
+
+        if function.responses.good != Type::None {
+            writeln!(
+                &mut code,
+                "{i}{i}return parse_obj_as({}, await resp.json())",
+                return_code,
+                i = super::INDENT,
+            )
+            .expect("write failed");
+        }
+
+        writeln!(&mut code, "\n").expect("write failed");
     }
 
     code

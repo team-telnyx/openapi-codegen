@@ -21,7 +21,7 @@ pub fn module(openapi: &OpenApi) -> String {
 
     // TODO: remove this when more auth methods are supported
     #[allow(clippy::zero_sized_map_values)]
-    let _security_schemes = {
+    let security_schemes = {
         openapi.components.as_ref().map_or_else(HashMap::default, |x| {
             crate::parse::security_schemes(&x.security_schemes)
         })
@@ -38,7 +38,7 @@ pub fn module(openapi: &OpenApi) -> String {
     module.push_str(include_str!("api_client.py"));
     module.push_str("\n\n");
 
-    module.push_str(&crate::codegen::functions(openapi));
+    module.push_str(&crate::codegen::functions(openapi, &security_schemes));
 
     module
 }
