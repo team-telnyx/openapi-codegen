@@ -6,7 +6,7 @@ use heck::ToSnakeCase;
 use okapi::openapi3::OpenApi;
 
 use super::type_to_string;
-use crate::parse::{Function, SecurityScheme, Type};
+use crate::parse::{Function, SecurityScheme};
 
 /// Generates a function for each method available on each HTTP path
 // TODO: remove this when more HTTP auth methods are implemented
@@ -22,7 +22,35 @@ pub fn functions(
     for ((method, path), function) in fs {
         let fn_ident = format!("{method}_{path}").to_snake_case();
 
-        let return_code = type_to_string(&function.responses.good, false);
+        let return_code = {
+            let return_types = function
+                .responses
+                .responses
+                .iter()
+                .map(|(_code, ty)| ty)
+                .cloned()
+                .collect::<Vec<_>>();
+
+            match return_types.as_slice() {
+                [] => String::from("None"),
+                [x] => type_to_string(x, false),
+                _ => {
+                    let mut return_code = return_types
+                        .into_iter()
+                        .map(|x| type_to_string(&x, false))
+                        .fold(String::from("Union["), |mut acc, x| {
+                            acc.push_str(&x);
+                            acc.push_str(", ");
+
+                            acc
+                        });
+
+                    return_code.push(']');
+
+                    return_code
+                }
+            }
+        };
 
         let args =
             function.arguments.iter().fold(String::default(), |mut acc, x| {
@@ -79,19 +107,7 @@ pub fn functions(
             write!(&mut code, "auth=self._auth").expect("write failed");
         }
 
-        writeln!(&mut code, ")").expect("write failed");
-
-        if function.responses.good != Type::None {
-            writeln!(
-                &mut code,
-                "{i}{i}return parse_obj_as({}, await resp.json())",
-                return_code,
-                i = super::INDENT,
-            )
-            .expect("write failed");
-        }
-
-        writeln!(&mut code, "\n").expect("write failed");
+        writeln!(&mut code, ")\n").expect("write failed");
     }
 
     code

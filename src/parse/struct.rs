@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use super::Field;
 
 /// A parsed struct
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Struct {
     /// Documentation from OpenAPI assocaited with this structure
     pub docs: Option<String>,

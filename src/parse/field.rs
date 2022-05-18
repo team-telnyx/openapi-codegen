@@ -5,7 +5,7 @@ use okapi::{openapi3::SchemaObject, schemars::schema::Schema};
 use super::{Error, Type};
 
 /// A parsed field
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Field {
     /// Type of the field
     pub r#type: Type,

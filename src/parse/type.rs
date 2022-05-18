@@ -17,7 +17,7 @@ use super::{Error, ErrorKind, Field, Struct};
 /// The preferred way to construct this type is to call its
 /// [`TryFrom`](TryFrom)`<&`[`SchemaObject`](SchemaObject)`>` implementation.
 // TODO: include validation/formatting information
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Type {
     /// Character sequence
     String,
