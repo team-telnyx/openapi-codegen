@@ -73,6 +73,11 @@ where
         i = indents(indent_level),
     );
 
+    if !function.responses.is_empty() {
+        // Add some visual space
+        code.push('\n');
+    }
+
     function.responses.iter().for_each(|(status, ty)| {
         let cond = format!(
             "{i}if resp.status == {status}:\n",
@@ -89,7 +94,18 @@ where
         code.push_str(&body);
     });
 
-    // TODO: handle case where response status is unknown
+    if function.responses.is_empty() {
+        code.push_str(&format!(
+            "\n{i}resp.raise_for_status()",
+            i = indents(indent_level)
+        ));
+    } else {
+        code.push_str(&format!(
+            "\n{i}raise aiohttp.ClientResponseError(resp.request_info, \
+             (resp,), status=resp.status)",
+            i = indents(indent_level)
+        ));
+    }
 
     code
 }
