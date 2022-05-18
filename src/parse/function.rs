@@ -72,7 +72,8 @@ impl Function {
 
     /// Generates a method for a given HTTP URL and HTTP method
     fn try_from_operation(operation: &Operation) -> Result<Self, Error> {
-        let args = Argument::try_from_parameters(operation.parameters.iter())?;
+        let arguments =
+            Argument::try_from_parameters(operation.parameters.iter())?;
 
         let responses = operation
             .responses
@@ -106,6 +107,9 @@ impl Function {
             })?;
 
         Ok(Function {
+            arguments,
+            responses,
+
             // TODO: include more things like examples, summary, and so on
             docs: operation.description.clone(),
             security_schemes: operation
@@ -114,9 +118,6 @@ impl Function {
                 .flat_map(|x| x.iter().flat_map(|x| x.iter().map(|(k, _)| k)))
                 .cloned()
                 .collect(),
-            arguments: args,
-
-            responses,
         })
     }
 }
