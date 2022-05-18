@@ -23,7 +23,7 @@ pub fn functions(
         code.push_str(&signature(1, &method, &path, &function));
         code.push_str(&documentation(2, function.docs.as_ref()));
         code.push_str(&body(2, method, path, &function, security_schemes));
-        code.push_str("\n\n\n");
+        code.push_str("\n\n");
     }
 
     code
@@ -67,11 +67,31 @@ where
         ""
     };
 
-    format!(
+    let mut code = format!(
         "{i}resp = await \
-         self._session.{method}(f\"{{self._base_url}}{path}\", {auth_args})",
+         self._session.{method}(f\"{{self._base_url}}{path}\", {auth_args})\n",
         i = indents(indent_level),
-    )
+    );
+
+    function.responses.iter().for_each(|(status, ty)| {
+        let cond = format!(
+            "{i}if resp.status == {status}:\n",
+            i = indents(indent_level)
+        );
+
+        let body = format!(
+            "{i}return parse_obj_as({}, await resp.json())\n",
+            type_to_string(ty, false),
+            i = indents(indent_level + 1)
+        );
+
+        code.push_str(&cond);
+        code.push_str(&body);
+    });
+
+    // TODO: handle case where response status is unknown
+
+    code
 }
 
 /// Generate the documentation for a function
