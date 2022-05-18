@@ -40,19 +40,21 @@ This checklist is nonexhaustive, but useful as a quick reference:
   * [X] Documentation
   * [ ] Requests
     * [X] Path parameters
-    * [ ] Query parameters
+    * [X] Query parameters
     * [ ] Headers
     * [ ] Body
   * [ ] Responses
     * [ ] Body
     * [ ] Headers
-  * [ ] Python: `aiohttp`
+  * [X] Python: `aiohttp`
 * [X] OpenAPI components
   * [ ] [Security schemes](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#securitySchemeObject)
-  * [X] [Schemas](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#schemaObject)
+    * [X] HTTP Basic Auth
+  * [ ] [Schemas](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#schemaObject)
     * [X] Documentation
     * [x] Property documentation
     * [X] Primitive JSON types
     * [X] Lists, Sets, and Maps
     * [X] Properties referencing other components
+    * [ ] Type-safe enums
     * [X] Python: `pydantic`
