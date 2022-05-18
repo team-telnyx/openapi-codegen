@@ -7,7 +7,7 @@ use okapi::{
     schemars::Map,
 };
 
-use super::{Error, Responses, Type};
+use super::{Error, ErrorKind, Type};
 
 /// A parsed function
 #[derive(Debug)]
@@ -22,7 +22,7 @@ pub struct Function {
     pub security_schemes: Vec<String>,
 
     /// The responses returned by this API request
-    pub responses: Responses,
+    pub responses: HashMap<String, Type>,
 }
 
 /// An owned HTTP method
@@ -74,6 +74,31 @@ impl Function {
     fn try_from_operation(operation: &Operation) -> Result<Self, Error> {
         let args = Argument::try_from_parameters(operation.parameters.iter())?;
 
+        let responses = operation
+            .responses
+            .responses
+            .iter()
+            .map(|(code, response)| match response {
+                RefOr::Object(x) => Ok((code, x)),
+                RefOr::Ref(_) => Err(Error::from(ErrorKind::Unimplemented)),
+            })
+            .filter_map(|x| {
+                x.map(|(code, x)| {
+                    x.content.get("application/json").map(|x| (code, x))
+                })
+                .transpose()
+            })
+            .filter_map(|x| {
+                x.map(|(code, x)| x.schema.as_ref().map(|x| (code, x)))
+                    .transpose()
+            })
+            .map(|x| x.and_then(|(code, x)| Ok((code, Type::try_from(x)?))))
+            .try_fold(HashMap::new(), |mut acc, x| {
+                let (code, response) = x?;
+                acc.insert(code.clone(), response);
+                Ok::<_, Error>(acc)
+            })?;
+
         Ok(Function {
             // TODO: include more things like examples, summary, and so on
             docs: operation.description.clone(),
@@ -85,7 +110,7 @@ impl Function {
                 .collect(),
             arguments: args,
 
-            responses: Responses::try_from(&operation.responses)?,
+            responses,
         })
     }
 }

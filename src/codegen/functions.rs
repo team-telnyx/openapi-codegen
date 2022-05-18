@@ -109,7 +109,7 @@ where
         "{i}async def {}(self, {}) -> {}:\n",
         name(method, path),
         arguments(function.arguments.iter()),
-        return_type(&function.responses.responses),
+        return_type(&function.responses),
         i = indents(indent_level),
     )
 }
