@@ -41,10 +41,10 @@ This checklist is nonexhaustive, but useful as a quick reference:
   * [ ] Requests
     * [X] Path parameters
     * [X] Query parameters
+    * [X] Body
     * [ ] Headers
-    * [ ] Body
   * [ ] Responses
-    * [ ] Body
+    * [X] Body
     * [ ] Headers
   * [X] Python: `aiohttp`
 * [X] OpenAPI components
