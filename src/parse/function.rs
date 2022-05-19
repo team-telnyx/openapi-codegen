@@ -227,7 +227,7 @@ impl Argument {
                         // correctly-set content type but missing SchemaObject
                         // means it's any JSON type.
                         || Ok(Type::Any),
-                        |x| Ok(Type::try_from(x)?),
+                        Type::try_from,
                     )
                 })
             })
