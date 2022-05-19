@@ -28,7 +28,8 @@ pub fn security_schemes(
         let object = if let RefOr::Object(x) = scheme {
             x
         } else {
-            todo!()
+            eprintln!("unsupported security scheme: {name}");
+            continue;
         };
 
         let http = if let SecuritySchemeData::Http {
@@ -38,13 +39,15 @@ pub fn security_schemes(
         {
             scheme
         } else {
-            todo!()
+            eprintln!("unsupported security scheme: {name}");
+            continue;
         };
 
         if http.contains("basic") {
             schemes.insert(name.clone(), SecurityScheme::BasicAuth);
         } else {
-            todo!()
+            eprintln!("unsupported security scheme: {name}");
+            continue;
         }
     }
 
