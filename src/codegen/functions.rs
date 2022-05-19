@@ -179,7 +179,7 @@ where
     format!(
         "{i}async def {}(self, {}) -> {}:\n",
         name(method, path),
-        arguments(function.arguments.iter()),
+        arguments(&function.arguments),
         return_type(&function.responses),
         i = indents(indent_level),
     )
@@ -198,15 +198,30 @@ where
 ///
 /// These go between the `(` and `)`. Return value will not contain any
 /// newlines.
-fn arguments<'a, I: Iterator<Item = &'a Argument>>(arguments: I) -> String {
-    arguments.fold(String::default(), |mut acc, x| {
-        acc.push_str(&format!(
-            "{}: {}, ",
-            &x.name,
-            type_to_string(&x.r#type, false)
-        ));
-        acc
-    })
+fn arguments(arguments: &[Argument]) -> String {
+    let mut args = String::new();
+
+    arguments.iter().filter(|x| !matches!(x.r#type, Type::Option(_))).for_each(
+        |x| {
+            args.push_str(&format!(
+                "{}: {}, ",
+                &x.name,
+                type_to_string(&x.r#type, false)
+            ));
+        },
+    );
+
+    arguments.iter().filter(|x| matches!(x.r#type, Type::Option(_))).for_each(
+        |x| {
+            args.push_str(&format!(
+                "{}: {} = None, ",
+                &x.name,
+                type_to_string(&x.r#type, false)
+            ));
+        },
+    );
+
+    args
 }
 
 /// Generate the type that a function returns

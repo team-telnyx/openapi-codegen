@@ -123,7 +123,7 @@ impl Function {
 }
 
 /// Where an argument is passed to the HTTP request
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Location {
     /// This argument goes in the query parameters
     Query,
@@ -136,7 +136,7 @@ pub enum Location {
 }
 
 /// A parsed function argument
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Argument {
     /// The name of this argument
     pub name: String,
