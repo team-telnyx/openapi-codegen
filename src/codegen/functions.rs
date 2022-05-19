@@ -126,11 +126,20 @@ where
             i = indents(indent_level)
         );
 
-        let body = format!(
-            "{i}return (\"{ty}\", parse_obj_as({ty}, await resp.json()))\n",
-            ty = type_to_string(ty, false),
-            i = indents(indent_level + 1)
-        );
+        let (_code, rets) = return_type(&function.responses);
+
+        let body = match rets {
+            Return::Many => format!(
+                "{i}return (\"{ty}\", parse_obj_as({ty}, await resp.json()))\n",
+                ty = type_to_string(ty, false),
+                i = indents(indent_level + 1)
+            ),
+            Return::One => format!(
+                "{i}return parse_obj_as({ty}, await resp.json())\n",
+                ty = type_to_string(ty, false),
+                i = indents(indent_level + 1)
+            ),
+        };
 
         code.push_str(&cond);
         code.push_str(&body);
@@ -187,7 +196,7 @@ where
         "{i}async def {}(self, {}) -> {}:\n",
         name(method, path),
         arguments(&function.arguments),
-        return_type(&function.responses),
+        return_type(&function.responses).0,
         i = indents(indent_level),
     )
 }
@@ -249,17 +258,26 @@ fn arguments(arguments: &[Argument]) -> String {
     args
 }
 
+/// The amount of unique types a function can return
+enum Return {
+    /// Returns one type
+    One,
+
+    /// Returns multiple types
+    Many,
+}
+
 /// Generate the type that a function returns
 ///
 /// This is the part that goes between the `->` and the `:`. Return value will
 /// not contain any newlines.
-fn return_type(responses: &BTreeMap<String, Type>) -> String {
+fn return_type(responses: &BTreeMap<String, Type>) -> (String, Return) {
     let return_types =
         responses.iter().map(|(_code, ty)| ty).cloned().collect::<Vec<_>>();
 
     match return_types.as_slice() {
-        [] => String::from("None"),
-        [x] => type_to_string(x, false),
+        [] => (String::from("None"), Return::One),
+        [x] => (type_to_string(x, false), Return::One),
         _ => {
             let mut return_code = return_types
                 .into_iter()
@@ -273,7 +291,7 @@ fn return_type(responses: &BTreeMap<String, Type>) -> String {
 
             return_code.push_str("]]");
 
-            return_code
+            (return_code, Return::Many)
         }
     }
 }
