@@ -68,7 +68,7 @@ pub fn types(openapi: &OpenApi) -> String {
                     code.push_str(r#"""""#);
                     code.push_str(docs);
                     code.push_str(r#"""""#);
-                    code.push_str("\n\n");
+                    code.push('\n');
                 }
             }
         } else {
@@ -77,6 +77,15 @@ pub fn types(openapi: &OpenApi) -> String {
 
         code.push_str("\n\n");
     }
+
+    // Pydantic does not like deferred type signatures, this dynamically
+    // un-defers them.
+    for (name, ..) in &components.schemas {
+        code.push_str(name);
+        code.push_str(".update_forward_refs()\n");
+    }
+
+    code.push_str("\n\n");
 
     code
 }
