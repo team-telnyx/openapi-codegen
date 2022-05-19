@@ -122,6 +122,19 @@ impl Function {
     }
 }
 
+/// Where an argument is passed to the HTTP request
+#[derive(Debug, PartialEq, Eq)]
+pub enum Location {
+    /// This argument goes in the query parameters
+    Query,
+
+    /// This argument goes in the path parameters
+    Path,
+
+    /// This argument goes... somewhere, probably
+    Unimplemented,
+}
+
 /// A parsed function argument
 #[derive(Debug)]
 pub struct Argument {
@@ -130,6 +143,9 @@ pub struct Argument {
 
     /// The type of this argument
     pub r#type: Type,
+
+    /// Where this argument gets passed in the request
+    pub location: Location,
 }
 
 impl Argument {
@@ -153,14 +169,21 @@ impl Argument {
                     ..
                 } = &param.value
                 {
-                    Some((param, schema))
+                    let location = match param.location.as_str() {
+                        "path" => Location::Path,
+                        "query" => Location::Query,
+                        _ => Location::Unimplemented,
+                    };
+
+                    Some((param, location, schema))
                 } else {
                     // TODO: is this lossy?
                     None
                 }
             })
-            .try_fold(Vec::default(), |mut acc, (param, schema)| {
+            .try_fold(Vec::default(), |mut acc, (param, location, schema)| {
                 acc.push(Argument {
+                    location,
                     name: param.name.clone(),
                     r#type: if param.required {
                         schema.try_into()?

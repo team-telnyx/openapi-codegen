@@ -6,7 +6,7 @@ use heck::ToSnakeCase;
 use okapi::openapi3::OpenApi;
 
 use super::type_to_string;
-use crate::parse::{Argument, Function, SecurityScheme, Type};
+use crate::parse::{Argument, Function, Location, SecurityScheme, Type};
 
 /// Generates a function for each method available on each HTTP path
 // TODO: remove this when more HTTP auth methods are implemented
@@ -67,11 +67,46 @@ where
         ""
     };
 
-    let mut code = format!(
+    let mut code = String::new();
+
+    let param_args = if function
+        .arguments
+        .iter()
+        .any(|x| x.location == Location::Query)
+    {
+        code.push_str(&format!("{i}params = {{\n", i = indents(indent_level)));
+
+        function
+            .arguments
+            .iter()
+            .filter(|x| x.location == Location::Query)
+            .map(|x| &x.name)
+            .for_each(|name| {
+                code.push_str(&format!(
+                    "{i}\"{name}\": {name},\n",
+                    i = indents(indent_level + 1)
+                ));
+            });
+
+        code.push_str(&format!("{i}}}\n", i = indents(indent_level)));
+
+        code.push_str(&format!(
+            "{i}params = {{k: v for k, v in params.items() if v is not \
+             None}}\n\n",
+            i = indents(indent_level),
+        ));
+
+        "params=params"
+    } else {
+        ""
+    };
+
+    code.push_str(&format!(
         "{i}resp = await \
-         self._session.{method}(f\"{{self._base_url}}{path}\", {auth_args})\n",
+         self._session.{method}(f\"{{self._base_url}}{path}\", {auth_args}, \
+         {param_args})\n",
         i = indents(indent_level),
-    );
+    ));
 
     if !function.responses.is_empty() {
         // Add some visual space
