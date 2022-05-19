@@ -3,7 +3,9 @@
 use std::collections::BTreeMap;
 
 use okapi::{
-    openapi3::{Operation, Parameter, ParameterValue, PathItem, RefOr},
+    openapi3::{
+        Operation, Parameter, ParameterValue, PathItem, RefOr, RequestBody,
+    },
     schemars::Map,
 };
 
@@ -72,8 +74,12 @@ impl Function {
 
     /// Generates a method for a given HTTP URL and HTTP method
     fn try_from_operation(operation: &Operation) -> Result<Self, Error> {
-        let arguments =
+        let mut arguments =
             Argument::try_from_parameters(operation.parameters.iter())?;
+
+        arguments.extend(Argument::try_from_request_body(
+            operation.request_body.iter(),
+        )?);
 
         let responses = operation
             .responses
@@ -130,6 +136,9 @@ pub enum Location {
 
     /// This argument goes in the path parameters
     Path,
+
+    /// This argument goes in the request body
+    Body,
 
     /// This argument goes... somewhere, probably
     Unimplemented,
@@ -194,5 +203,42 @@ impl Argument {
 
                 Ok::<_, Error>(acc)
             })
+    }
+
+    /// Potentially construct an argument from HTTP request body information
+    fn try_from_request_body<'a, I>(
+        ref_or_body: I,
+    ) -> Result<Option<Self>, Error>
+    where
+        I: Iterator<Item = &'a RefOr<RequestBody>>,
+    {
+        ref_or_body
+            .map(|ref_or_body| match ref_or_body {
+                RefOr::Object(x) => Ok(x),
+                RefOr::Ref(_) => Err(Error::from(ErrorKind::Unimplemented)),
+            })
+            .filter_map(|x| {
+                x.map(|x| x.content.get("application/json")).transpose()
+            })
+            .map(|x| {
+                x.and_then(|x| {
+                    x.schema.as_ref().map_or_else(
+                        // Work around incomplete specs by assuming
+                        // correctly-set content type but missing SchemaObject
+                        // means it's any JSON type.
+                        || Ok(Type::Any),
+                        |x| Ok(Type::try_from(x)?),
+                    )
+                })
+            })
+            .map(|x| {
+                x.map(|x| Self {
+                    name: "body".to_owned(),
+                    r#type: x,
+                    location: Location::Body,
+                })
+            })
+            .next()
+            .transpose()
     }
 }

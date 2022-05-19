@@ -62,7 +62,7 @@ where
         .copied();
 
     let auth_args = if schemes.any(|x| x == SecurityScheme::BasicAuth) {
-        "auth=self._auth"
+        "auth=self._auth, "
     } else {
         ""
     };
@@ -96,15 +96,22 @@ where
             i = indents(indent_level),
         ));
 
-        "params=params"
+        "params=params, "
     } else {
         ""
     };
 
+    let body_args =
+        if function.arguments.iter().any(|x| x.location == Location::Body) {
+            "json=body.dict(by_alias=True), "
+        } else {
+            ""
+        };
+
     code.push_str(&format!(
         "{i}resp = await \
-         self._session.{method}(f\"{{self._base_url}}{path}\", {auth_args}, \
-         {param_args})\n",
+         self._session.{method}(f\"{{self._base_url}}{path}\", \
+         {auth_args}{param_args}{body_args})\n",
         i = indents(indent_level),
     ));
 
@@ -201,25 +208,43 @@ where
 fn arguments(arguments: &[Argument]) -> String {
     let mut args = String::new();
 
-    arguments.iter().filter(|x| !matches!(x.r#type, Type::Option(_))).for_each(
-        |x| {
+    // Body argument goes first
+    arguments.iter().filter(|x| x.location == Location::Body).for_each(|x| {
+        args.push_str(&format!(
+            "{}: {}, ",
+            &x.name,
+            type_to_string(&x.r#type, false)
+        ));
+    });
+
+    // Other non-optional arguments go next
+    arguments
+        .iter()
+        .filter(|x| {
+            x.location != Location::Body
+                && (!matches!(x.r#type, Type::Option(_)))
+        })
+        .for_each(|x| {
             args.push_str(&format!(
                 "{}: {}, ",
                 &x.name,
                 type_to_string(&x.r#type, false)
             ));
-        },
-    );
+        });
 
-    arguments.iter().filter(|x| matches!(x.r#type, Type::Option(_))).for_each(
-        |x| {
+    // Optional arguments go last, defaulted to `None`
+    arguments
+        .iter()
+        .filter(|x| {
+            x.location != Location::Body && matches!(x.r#type, Type::Option(_))
+        })
+        .for_each(|x| {
             args.push_str(&format!(
                 "{}: {} = None, ",
                 &x.name,
                 type_to_string(&x.r#type, false)
             ));
-        },
-    );
+        });
 
     args
 }
