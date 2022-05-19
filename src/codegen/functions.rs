@@ -127,8 +127,8 @@ where
         );
 
         let body = format!(
-            "{i}return parse_obj_as({}, await resp.json())\n",
-            type_to_string(ty, false),
+            "{i}return (\"{ty}\", parse_obj_as({ty}, await resp.json()))\n",
+            ty = type_to_string(ty, false),
             i = indents(indent_level + 1)
         );
 
@@ -264,14 +264,14 @@ fn return_type(responses: &BTreeMap<String, Type>) -> String {
             let mut return_code = return_types
                 .into_iter()
                 .map(|x| type_to_string(&x, false))
-                .fold(String::from("Union["), |mut acc, x| {
+                .fold(String::from("Tuple[str, Union["), |mut acc, x| {
                     acc.push_str(&x);
                     acc.push_str(", ");
 
                     acc
                 });
 
-            return_code.push(']');
+            return_code.push_str("]]");
 
             return_code
         }

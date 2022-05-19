@@ -46,7 +46,6 @@ This checklist is nonexhaustive, but useful as a quick reference:
   * [ ] Responses
     * [X] Body
     * [ ] Headers
-  * [X] Python: `aiohttp`
 * [X] OpenAPI components
   * [ ] [Security schemes](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#securitySchemeObject)
     * [X] HTTP Basic Auth
@@ -57,4 +56,31 @@ This checklist is nonexhaustive, but useful as a quick reference:
     * [X] Lists, Sets, and Maps
     * [X] Properties referencing other components
     * [ ] Type-safe enums
-    * [X] Python: `pydantic`
+
+### Python
+
+Generated Python code uses `aiohttp` to make requests and `pydantic` for
+request/response serialization and validation. Check
+[`requirements.in`](./requirements.in) for the specific versions supported.
+
+`ApiClient` member functions may appear to have peculiar return types, this is
+because Python has no support for sum types. `isinstance` is incapable of
+operating on types with generic parameters; for example, `isinstance(x,
+List[int])` is not allowed. As a result, generated functions have a return type
+of `Tuple[str, Union[...]]`. Thus, you can check which type from the `Union` you
+have by checking against the tuple's first element like so:
+
+```python
+client: ApiClient = # construct the client
+
+(ty, resp) = await client.get_something() # -> Tuple[str, Union[str, List[int]]]
+
+if ty == "str":
+    s = cast(str, resp)
+    print("a string:", s)
+elif ty == "List[int]":
+    ints = cast(List[int], resp)
+    print("a list of ints:", ints)
+else:
+    raise AssertionError("unreachable")
+```

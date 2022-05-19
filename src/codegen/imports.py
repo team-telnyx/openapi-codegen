@@ -1,4 +1,4 @@
-from typing import Optional, List, Set, Dict, Any, Union
+from typing import Optional, List, Set, Dict, Any, Union, Tuple
 
 import aiohttp
 from pydantic import BaseModel, Field, parse_obj_as
