@@ -48,9 +48,9 @@ pub fn types(openapi: &OpenApi) -> String {
                 code.push_str(&type_to_string(&data.r#type, true));
 
                 if matches!(data.r#type, Type::Option(_)) {
-                    code.push_str(" = Field(None, ");
+                    code.push_str(" = Field(default=None, ");
                 } else {
-                    code.push_str(" = Field(..., ");
+                    code.push_str(" = Field(default=..., ");
                 }
 
                 // Pydantic field documentation
