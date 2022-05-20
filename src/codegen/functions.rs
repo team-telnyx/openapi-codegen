@@ -37,6 +37,47 @@ fn indents(indent_level: usize) -> String {
     })
 }
 
+/// Generate any URL query parameters required to make the HTTP request
+///
+/// The first string in the tuple is the code that builds the query, and the
+/// second string is what should be included in the HTTP call.
+fn query_param_arguments(
+    indent_level: usize,
+    function: &Function,
+) -> Option<(String, &'static str)> {
+    let has_query_arguments =
+        function.arguments.iter().any(|x| x.location == Location::Query);
+
+    if !has_query_arguments {
+        return None;
+    }
+
+    let mut code = String::new();
+
+    code.push_str(&format!("{i}params = {{\n", i = indents(indent_level)));
+
+    function
+        .arguments
+        .iter()
+        .filter(|x| x.location == Location::Query)
+        .map(|x| &x.name)
+        .for_each(|name| {
+            code.push_str(&format!(
+                "{i}\"{name}\": {name},\n",
+                i = indents(indent_level + 1)
+            ));
+        });
+
+    code.push_str(&format!("{i}}}\n", i = indents(indent_level)));
+
+    code.push_str(&format!(
+        "{i}params = {{k: v for k, v in params.items() if v is not None}}\n\n",
+        i = indents(indent_level),
+    ));
+
+    Some((code, "params=params, "))
+}
+
 /// Generate the body of a function
 // TODO: remove this when more HTTP auth methods are implemented
 #[allow(clippy::zero_sized_map_values)]
@@ -69,34 +110,11 @@ where
 
     let mut code = String::new();
 
-    let param_args = if function
-        .arguments
-        .iter()
-        .any(|x| x.location == Location::Query)
+    let param_args = if let Some((builder, args)) =
+        query_param_arguments(indent_level, function)
     {
-        code.push_str(&format!("{i}params = {{\n", i = indents(indent_level)));
-
-        function
-            .arguments
-            .iter()
-            .filter(|x| x.location == Location::Query)
-            .map(|x| &x.name)
-            .for_each(|name| {
-                code.push_str(&format!(
-                    "{i}\"{name}\": {name},\n",
-                    i = indents(indent_level + 1)
-                ));
-            });
-
-        code.push_str(&format!("{i}}}\n", i = indents(indent_level)));
-
-        code.push_str(&format!(
-            "{i}params = {{k: v for k, v in params.items() if v is not \
-             None}}\n\n",
-            i = indents(indent_level),
-        ));
-
-        "params=params, "
+        code.push_str(&builder);
+        args
     } else {
         ""
     };
