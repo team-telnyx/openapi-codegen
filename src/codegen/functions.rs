@@ -1,6 +1,6 @@
 //! Generate code for HTTP methods
 
-use std::collections::BTreeMap;
+use std::{borrow::Borrow, collections::BTreeMap};
 
 use heck::ToSnakeCase;
 use okapi::openapi3::OpenApi;
@@ -54,28 +54,114 @@ fn query_param_arguments(
 
     let mut code = String::new();
 
-    code.push_str(&format!("{i}params = {{\n", i = indents(indent_level)));
+    code.push_str(&format!(
+        "{i}init_params: List[Tuple[str, Optional[str]]] = [\n",
+        i = indents(indent_level)
+    ));
 
+    // Generate a list of trivially convertable parameters
     function
         .arguments
         .iter()
         .filter(|x| x.location == Location::Query)
-        .map(|x| &x.name)
-        .for_each(|name| {
+        .filter_map(|x| {
+            var_to_url_str(&x.name, &x.r#type).map(|s| (&x.name, s))
+        })
+        .for_each(|(name, stringifier)| {
             code.push_str(&format!(
-                "{i}\"{name}\": {name},\n",
+                "{i}(\"{name}\", {stringifier}),\n",
                 i = indents(indent_level + 1)
             ));
         });
 
-    code.push_str(&format!("{i}}}\n", i = indents(indent_level)));
+    // Close off the list
+    code.push_str(&format!("{i}]\n", i = indents(indent_level)));
 
+    // Omit any `None` values
     code.push_str(&format!(
-        "{i}params = {{k: v for k, v in params.items() if v is not None}}\n\n",
+        "{i}params: List[Tuple[str, str]] = [(k, v) for k, v in init_params \
+         if v is not None]\n",
         i = indents(indent_level),
     ));
 
+    // Convert lists and optional lists into tuple pairs
+    //
+    // I swear, if some OpenAPI spec takes a *list* of *options*...
+    function
+        .arguments
+        .iter()
+        .filter(|x| x.location == Location::Query)
+        .filter_map(
+            // TODO: This is probably fine, but ideally it would recurse. If it
+            // does recurse, the `if {name} is not None` check below should
+            // technically also recurse, but since `Option[T]` is the same as
+            // `Union[T, None]` and `Union[Union[T, None] None]` is technically
+            // the same, it probably doesn't actually matter.
+            |x| match &x.r#type {
+                Type::List(y) | Type::Set(y) => Some((&x.name, &x.r#type, y)),
+                Type::Option(y) => match y.borrow() {
+                    Type::List(y) | Type::Set(y) => {
+                        Some((&x.name, &x.r#type, y))
+                    }
+                    _ => None,
+                },
+                _ => None,
+            },
+        )
+        .filter_map(|(x, original_ty, list_item_ty)| {
+            var_to_url_str("x", list_item_ty).map(move |s| (x, original_ty, s))
+        })
+        .for_each(|(name, ty, stringifier)| {
+            if matches!(ty.borrow(), Type::Option(_)) {
+                code.push_str(&format!(
+                    "{i}if {name} is not None:\n",
+                    i = indents(indent_level)
+                ));
+            }
+
+            code.push_str(&format!(
+                "{i}params.extend([(\"{name}\", {}) for x in {name}])\n",
+                stringifier,
+                name = name,
+                i = indents(
+                    indent_level
+                        + if matches!(ty.borrow(), Type::Option(_)) {
+                            1
+                        } else {
+                            0
+                        }
+                ),
+            ));
+        });
+
+    code.push('\n');
+
     Some((code, "params=params, "))
+}
+
+/// From a variable, construct conversion code for turning it into a URL string
+///
+/// If this function returns `None`, there is no trivial conversion method.
+fn var_to_url_str<S: AsRef<str>>(name: S, ty: &Type) -> Option<String> {
+    let name = name.as_ref();
+
+    match ty {
+        // Trivial string conversion
+        Type::String | Type::Float | Type::Integer => {
+            Some(format!("str({name})"))
+        }
+
+        // Use the more typical lowercase versions
+        Type::Bool => Some(format!(r#"("true" if {} else "false")"#, name)),
+
+        // Handle optional values properly
+        Type::Option(ty) => Some(format!(
+            "({} if {name} is not None else None)",
+            var_to_url_str(name, ty)?,
+        )),
+
+        _ => None,
+    }
 }
 
 /// Generate the body of a function
