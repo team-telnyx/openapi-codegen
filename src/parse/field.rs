@@ -12,6 +12,9 @@ pub struct Field {
 
     /// Field documentation
     pub docs: Option<String>,
+
+    /// Whether the use of this field is deprecated
+    pub deprecated: bool,
 }
 
 impl Field {
@@ -20,6 +23,7 @@ impl Field {
         Self {
             r#type,
             docs: None,
+            deprecated: false,
         }
     }
 
@@ -51,6 +55,17 @@ impl TryFrom<&SchemaObject> for Field {
         {
             // TODO: include more things like examples, the title, and so on
             x.set_docs(docs);
+        }
+
+        if schema_object.metadata.as_ref().map_or(false, |x| x.deprecated) {
+            x.r#type = Type::Option(Box::new(x.r#type));
+            x.deprecated = true;
+
+            if let Some(x) = x.docs.as_mut() {
+                x.push_str("\n\nThis field is deprecated.");
+            } else {
+                x.docs = Some("This field is deprecated".to_owned());
+            }
         }
 
         Ok(x)

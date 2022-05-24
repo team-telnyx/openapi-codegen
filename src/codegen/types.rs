@@ -53,6 +53,10 @@ pub fn types(openapi: &OpenApi) -> String {
                     code.push_str(" = Field(default=..., ");
                 }
 
+                if data.deprecated {
+                    code.push_str("deprecated=True, ");
+                }
+
                 // Pydantic field documentation
                 if let Some(docs) = data.docs.as_ref() {
                     code.push_str(r#"description="""""#);
