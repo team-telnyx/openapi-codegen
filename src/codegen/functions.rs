@@ -209,7 +209,17 @@ where
         if function.arguments.iter().any(|x| x.location == Location::Body) {
             "json=body.dict(by_alias=True), "
         } else {
-            ""
+            // As far as I can tell, the default value for requests'
+            // `Content-Type`s is undefined where `requestBody` is undefined.
+            // Some servers require a particular `Content-Type` even though
+            // there is no actual data in the body, so this information is not
+            // conveyed by the OpenAPI spec they release. I think
+            // `application/json` is a relatively safe default that should work
+            // in most cases where this happens. I should probably open an issue
+            // against the OpenAPI spec to sort out this potential ambiguity and
+            // the providers who exhibit this behavior since this might be
+            // non-compliant with whatever the real behavior is supposed to be.
+            r#"headers={"Content-Type": "application/json"}"#
         };
 
     code.push_str(&format!(
