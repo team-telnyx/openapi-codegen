@@ -63,24 +63,35 @@ Generated Python code uses `aiohttp` to make requests and `pydantic` for
 request/response serialization and validation. Check
 [`requirements.in`](./requirements.in) for the specific versions supported.
 
-`ApiClient` member functions may appear to have peculiar return types, this is
-because Python has no support for sum types. `isinstance` is incapable of
-operating on types with generic parameters; for example, `isinstance(x,
-List[int])` is not allowed. As a result, generated functions have a return type
-of `Tuple[str, Union[...]]`. Thus, you can check which type from the `Union` you
-have by checking against the tuple's first element like so:
+`ApiClient` member functions may appear to have peculiar return types. This is
+because they are [sum types][wikipedia], and you can read more about how they
+work in Python [here][sum_types_python]. Here's a simple example of how to use
+the return types meaningfully:
 
 ```python
 client: ApiClient = # construct the client
 
-(ty, resp) = await client.get_something() # -> Tuple[str, Union[str, List[int]]]
+resp = await client.get_example()
 
-if ty == "str":
-    s = cast(str, resp)
-    print("a string:", s)
-elif ty == "List[int]":
-    ints = cast(List[int], resp)
-    print("a list of ints:", ints)
-else:
-    raise AssertionError("unreachable")
+# The type of `resp` is:
+#
+# Union[
+#   Tuple[Literal["str"], str],
+#   Tuple[Literal["List[int]"], List[int]]
+# ]
+
+match resp:
+    case ("str", x):
+        # The type of `x` is narrowed to `str`
+        print("a string:", x)
+    case ("List[int]", x):
+        # The type of `x` is narrowed to `List[int]`
+        print("a list of ints:", x)
 ```
+
+Currently, undocumented HTTP response codes are raised as
+`aiohttp.ClientResponseError`, deserialization failures are raised as their
+usual `pydantic` exceptions, and other such failures are raised as exceptions.
+
+[wikipedia]: https://en.wikipedia.org/wiki/Tagged_union
+[sum_types_python]: http://charles.page.computer.surgery/blog/python-has-sum-types.html

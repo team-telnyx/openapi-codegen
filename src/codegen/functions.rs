@@ -386,14 +386,16 @@ fn return_type(responses: &BTreeMap<String, Type>) -> (String, Return) {
             let mut return_code = return_types
                 .into_iter()
                 .map(|x| type_to_string(&x, false))
-                .fold(String::from("Tuple[str, Union["), |mut acc, x| {
-                    acc.push_str(&x);
-                    acc.push_str(", ");
+                .fold(String::from("Union["), |mut acc, x| {
+                    acc.push_str(&format!(
+                        "Tuple[Literal[\"{ty}\"], {ty}], ",
+                        ty = x
+                    ));
 
                     acc
                 });
 
-            return_code.push_str("]]");
+            return_code.push(']');
 
             (return_code, Return::Many)
         }
