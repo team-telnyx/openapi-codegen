@@ -1,6 +1,6 @@
 # `openapi-codegen`
 
-Generate well-typed code from an OpenAPI spec
+Generate well-typed Python code from an OpenAPI spec
 
 ---
 
@@ -14,7 +14,7 @@ Generate well-typed code from an OpenAPI spec
    running `make petstore`. (Note: this will overwrite any existing
    `openapi.json` file.)
 
-3. In order for the generated Python code to be useable, run `make deps` to
+3. In order for the generated Python code to be usable, run `make deps` to
    download the required dependencies.
 
 4. Finally, you can generate code by running `make from-json` or `make
