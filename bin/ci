@@ -62,8 +62,6 @@ shellcheck --version | grep version: | cut -f2 -d' '
 echo -n "markdownlint "
 markdownlint --version
 
-cargo outdated -R
-
 banner "Linting"
 markdownlint -i target .
 shfmt -d -i 4 .

@@ -50,7 +50,6 @@
         RUST_SRC_PATH = "${rust.stable.rust-src}/lib/rustlib/src/rust/library";
 
         nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ (with pkgs; [
-          cargo-outdated
           file
           ncurses
           nixpkgs-fmt
