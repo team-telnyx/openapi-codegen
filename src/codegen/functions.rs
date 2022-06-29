@@ -386,21 +386,20 @@ enum Return {
 /// This is the part that goes between the `->` and the `:`. Return value will
 /// not contain any newlines.
 fn return_type(responses: &BTreeMap<String, Type>) -> (String, Return) {
-    let return_types =
-        responses.iter().map(|(_code, ty)| ty).cloned().collect::<Vec<_>>();
+    let return_types = responses
+        .iter()
+        .map(|(code, ty)| (code.clone(), ty.clone()))
+        .collect::<Vec<_>>();
 
     match return_types.as_slice() {
         [] => (String::from("None"), Return::One),
-        [x] => (type_to_string(x, false), Return::One),
+        [(_code, ty)] => (type_to_string(ty, false), Return::One),
         _ => {
             let mut return_code = return_types
                 .into_iter()
-                .map(|x| type_to_string(&x, false))
-                .fold(String::from("Union["), |mut acc, x| {
-                    acc.push_str(&format!(
-                        "Tuple[Literal[\"{ty}\"], {ty}], ",
-                        ty = x
-                    ));
+                .map(|(code, ty)| (code, type_to_string(&ty, false)))
+                .fold(String::from("Union["), |mut acc, (code, ty)| {
+                    acc.push_str(&format!("Tuple[Literal[{code}], {ty}], ",));
 
                     acc
                 });

@@ -76,15 +76,17 @@ resp = await client.get_example()
 # The type of `resp` is:
 #
 # Union[
-#   Tuple[Literal["str"], str],
-#   Tuple[Literal["List[int]"], List[int]]
+#   Tuple[Literal[200], str],
+#   Tuple[Literal[400], List[int]]
 # ]
+#
+# where the value inside the Literal[] is the HTTP response code
 
 match resp:
-    case ("str", x):
+    case (200, x):
         # The type of `x` is narrowed to `str`
         print("a string:", x)
-    case ("List[int]", x):
+    case (400, x):
         # The type of `x` is narrowed to `List[int]`
         print("a list of ints:", x)
 ```
